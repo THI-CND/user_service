@@ -4,12 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/BieggerM/userservice/pkg/database"
 	"github.com/BieggerM/userservice/pkg/models"
+	"github.com/BieggerM/userservice/pkg/broker"
+	"encoding/json"
 )
 
 var DB database.Postgres
+var MB broker.RabbitMQ
 
 func main() {
-	// create database implementation
+	MB.Connect()
+	MB.Subscribe("users", "")
 	r := gin.Default()
 	r.GET("/users", listUsers)
 	r.GET("/users/:username", getUser)
@@ -17,6 +21,7 @@ func main() {
 	r.PATCH("/users", updateUser)
 	r.DELETE("/users/", deleteUser)
 	r.Run(":8080")
+	MB.Disconnect()
 }
 
 func listUsers(c *gin.Context) {
@@ -41,9 +46,23 @@ func createUser(c *gin.Context) {
 	var user models.User
 	c.ShouldBindBodyWithJSON(&user)
 	DB.SaveUser(user)
+
+	// Prepare message for RabbitMQ
+	msgBody, err := json.Marshal(user) // Marshall user struct to JSON
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to marshal user to JSON"})
+		return
+	}
+	if err := MB.Publish("users", "", msgBody); err != nil {
+        c.JSON(500, gin.H{"error": "failed to publish message to RabbitMQ"})
+        return
+    }
 	c.JSON(200, gin.H{
 		"message": "user created",
 	})
+
+	
+
 }
 
 func updateUser(c *gin.Context) {
