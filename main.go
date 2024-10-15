@@ -13,7 +13,6 @@ var MB broker.RabbitMQ
 
 func main() {
 	MB.Connect()
-	MB.Subscribe("users", "")
 	r := gin.Default()
 	r.GET("/users", listUsers)
 	r.GET("/users/:username", getUser)
@@ -29,7 +28,6 @@ func listUsers(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"users": users,
 	})
-
 }
 
 func getUser(c *gin.Context) {
@@ -39,7 +37,6 @@ func getUser(c *gin.Context) {
 		"firstname" : user.FirstName,
 		"lastname" : user.LastName,
 	})
-
 }
 
 func createUser(c *gin.Context) {
@@ -60,9 +57,6 @@ func createUser(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "user created",
 	})
-
-	
-
 }
 
 func updateUser(c *gin.Context) {

@@ -1,19 +1,3 @@
-/*
-Copyright 2020 The Knative Authors
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package broker
 
 import (
@@ -58,6 +42,19 @@ func (r *RabbitMQ) Publish(exchange, key string, msgBody []byte) error {
     }
 	
 	ch, err := r.Conn.Channel()
+	err = ch.ExchangeDeclare(exchange, "topic", true, false, false, false, nil)
+
+	q, err := ch.QueueDeclare(
+		"users", // Queue name
+		true,        // Durable
+		false,       // Auto-delete
+		false,       // Exclusive
+		false,       // No-wait
+		nil,         // Arguments
+	)
+	q = q
+	
+
 	if err != nil {
 		return err
 	}
@@ -66,6 +63,7 @@ func (r *RabbitMQ) Publish(exchange, key string, msgBody []byte) error {
 }
 
 // Subscribe subscribes to a message from the RabbitMQ message broker
+// Implement GoRoutine to handle messages
 func (r *RabbitMQ) Subscribe(exchange, key string) error {
 	ch, err := r.Conn.Channel()
 	if err != nil {
@@ -84,9 +82,11 @@ func (r *RabbitMQ) Subscribe(exchange, key string) error {
 	if err != nil {
 		return err
 	}
+
 	for msg := range msgs {
 		handlemsg(msg)
 	}
+	
 	return nil
 }
 
