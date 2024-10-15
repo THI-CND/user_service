@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/BieggerM/userservice/database"
-	"github.com/BieggerM/userservice/models"
+	"github.com/BieggerM/userservice/pkg/database"
+	"github.com/BieggerM/userservice/pkg/models"
 )
 
 var DB database.Postgres

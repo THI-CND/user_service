@@ -3,7 +3,7 @@ package database
 import (
     "database/sql"
     "fmt"
-    "github.com/BieggerM/userservice/models"
+    "github.com/BieggerM/userservice/pkg/models"
     _ "github.com/lib/pq"
 )
 
