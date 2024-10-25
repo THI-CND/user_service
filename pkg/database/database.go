@@ -29,14 +29,16 @@ func (p *Postgres) connect() {
 }
 
 // SaveUser saves a user to the PostgreSQL database
-func (p *Postgres) SaveUser(user models.User) models.User {
+func (p *Postgres) SaveUser(user models.User) error {
     p.connect()
     defer p.DB.Close()
     _, err := p.DB.Exec("insert into users (username, firstname, lastname) values ($1, $2, $3)", user.Username, user.FirstName, user.LastName)
     if err != nil {
         fmt.Println(err)
+        return err
     }
-    return user
+    return nil
+   
 }
 
 // DeleteUser deletes a user from the PostgreSQL database

@@ -21,7 +21,7 @@ type RabbitMQ struct {
 
 // Connect connects to the RabbitMQ message broker
 func (r *RabbitMQ) Connect() error {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://user:password@localhost:5672/")
 	if err != nil {
 		return err
 	}

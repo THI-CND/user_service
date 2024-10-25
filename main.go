@@ -42,7 +42,10 @@ func getUser(c *gin.Context) {
 func createUser(c *gin.Context) {
 	var user models.User
 	c.ShouldBindBodyWithJSON(&user)
-	DB.SaveUser(user)
+	if err := DB.SaveUser(user); err != nil {
+		c.JSON(500, gin.H{"error": "failed to save user to database - username exists"})
+		return
+	}
 
 	// Prepare message for RabbitMQ
 	msgBody, err := json.Marshal(user) // Marshall user struct to JSON
@@ -50,6 +53,7 @@ func createUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "failed to marshal user to JSON"})
 		return
 	}
+	// publish message to RabbitMQ exchange user with routing key ""
 	if err := MB.Publish("users", "", msgBody); err != nil {
         c.JSON(500, gin.H{"error": "failed to publish message to RabbitMQ"})
         return
