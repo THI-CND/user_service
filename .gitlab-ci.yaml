@@ -1,0 +1,33 @@
+image: golang:1.20-alpine
+
+stages:
+  - lint
+  - test
+  - build
+  - push
+
+lint:
+  stage: lint
+  script:
+    - go vet ./...
+    - golint ./...
+
+test:
+  stage: test
+  script:
+    - go test ./...
+
+build:
+  stage: build
+  script:
+    - go mod tidy
+    - go build -o app .
+    - docker build -t my-go-app .
+
+push:
+  stage: push
+  script:
+    - docker login registry.gitlab.com -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker push registry.gitlab.com/<your_namespace>/my-go-app:<tag>
+  only:
+    - main
