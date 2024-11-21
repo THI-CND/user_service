@@ -22,7 +22,7 @@ type Postgres struct {
 // Connect connects to the PostgreSQL database
 func (p *Postgres) connect() {
     var err error
-    p.DB, err = sql.Open("postgres", "user=postgres dbname=postgres sslmode=disable password=postgres")  
+    p.DB, err = sql.Open("postgres", "user=postgres dbname=postgres sslmode=disable password=postgres host=postgres-postgres-1 port=5432")  
     if err != nil {
         fmt.Println(err)
     }
