@@ -3,7 +3,7 @@ package broker
 import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
-
+	"os"
 )
 
 // MessageBroker is the interface for the message broker
@@ -21,12 +21,19 @@ type RabbitMQ struct {
 
 // Connect connects to the RabbitMQ message broker
 func (r *RabbitMQ) Connect() error {
-	conn, err := amqp.Dial("amqp://user:password@localhost:5672/")
-	if err != nil {
-		return err
-	}
-	r.Conn = conn
-	return nil
+	rabbitmqHost := os.Getenv("RABBITMQ_HOST")
+    rabbitmqPort := os.Getenv("RABBITMQ_PORT")
+    rabbitmqUser := os.Getenv("RABBITMQ_USER")
+    rabbitmqPassword := os.Getenv("RABBITMQ_PASSWORD")
+	var err error
+	connStr := fmt.Sprintf("amqp://%s:%s@%s:%s/", rabbitmqUser, rabbitmqPassword, rabbitmqHost, rabbitmqPort)
+	r.Conn, err = amqp.Dial(connStr)
+    if err != nil {
+        fmt.Println("Failed to connect to RabbitMQ:", err)
+        return err
+    }
+    fmt.Println("Connected to RabbitMQ")
+    return nil
 }
 
 // Disconnect disconnects from the RabbitMQ message broker
