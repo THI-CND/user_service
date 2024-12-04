@@ -48,3 +48,27 @@ Request Body:
 }
 ```
 
+### Update User
+URL: /users
+Method: PUT
+Request Body:
+
+```json
+{
+  "username": "johndoe",
+  "firstname": "John",
+  "lastname": "Doe"
+}
+```
+### Delete User
+URL: /users/:username
+Method: DELETE
+Success Response:
+* Code: 200 OK
+
+### Get User
+URL: /users/:username
+Method: GET
+Success Response:
+* Code: 200 OK
+
