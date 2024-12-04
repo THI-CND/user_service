@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/BieggerM/userservice/pkg/models"
     _ "github.com/lib/pq"
+    "os"
 )
 
 type Database interface {
@@ -21,8 +22,14 @@ type Postgres struct {
 
 // Connect connects to the PostgreSQL database
 func (p *Postgres) connect() {
+    dbHost := os.Getenv("DB_HOST")
+    dbPort := os.Getenv("DB_PORT")
+    dbUser := os.Getenv("DB_USER")
+    dbPassword := os.Getenv("DB_PASSWORD")
+    dbName := os.Getenv("DB_NAME")
     var err error
-    p.DB, err = sql.Open("postgres", "user=postgres dbname=postgres sslmode=disable password=postgres host=postgres-postgres-1 port=5432")  
+    connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
+    p.DB, err = sql.Open("postgres", connStr)
     if err != nil {
         fmt.Println(err)
     }
