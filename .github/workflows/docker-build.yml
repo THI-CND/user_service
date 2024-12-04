@@ -31,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}/userservice:latest
+          tags: ghcr.io/thi-cnd/user_service/userservice:latest
