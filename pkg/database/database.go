@@ -30,6 +30,7 @@ func (p *Postgres) connect() {
     var err error
     connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
     p.DB, err = sql.Open("postgres", connStr)
+    fmt.Println("Connected to PostgreSQL")
     if err != nil {
         fmt.Println(err)
     }
