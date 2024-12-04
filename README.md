@@ -72,3 +72,20 @@ Method: GET
 Success Response:
 * Code: 200 OK
 
+## MessageBroker
+The User Service uses RabbitMQ as a message broker to publish user creation messages. A simple interface is provided to allow for similar tools. The RabbitMQ struct in the messagebroker.go file handles the connection, publishing, and subscribing to RabbitMQ.
+
+### Connect
+The Connect method establishes a connection to the RabbitMQ server using the provided credentials and host information.
+
+### Disconnect
+The Disconnect method closes the connection to the RabbitMQ server.
+
+### Publish
+The Publish method publishes a message to the specified exchange with the given routing key and message body.
+
+### Subscribe
+The Subscribe method subscribes to messages from the specified exchange and routing key, and processes them using the provided handler function.
+
+Example usage in main.go:
+

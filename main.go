@@ -14,15 +14,15 @@ var MB broker.RabbitMQ
 
 
 func main() {
-    os.Setenv("DB_HOST", "localhost")
-    os.Setenv("DB_PORT", "5432")
-    os.Setenv("DB_USER", "postgres")
-    os.Setenv("DB_PASSWORD", "password")
-    os.Setenv("DB_NAME", "recipe")
-    os.Setenv("RABBIT_HOST", "localhost")
-    os.Setenv("RABBIT_PORT", "5672")
-    os.Setenv("RABBIT_USER", "guest")
-    os.Setenv("RABBIT_PASSWORD", "guest")
+    // os.Setenv("DB_HOST", "localhost")
+    // os.Setenv("DB_PORT", "5432")
+    // os.Setenv("DB_USER", "postgres")
+    // os.Setenv("DB_PASSWORD", "password")
+    // os.Setenv("DB_NAME", "recipe")
+    // os.Setenv("RABBIT_HOST", "localhost")
+    // os.Setenv("RABBIT_PORT", "5672")
+    // os.Setenv("RABBIT_USER", "guest")
+    // os.Setenv("RABBIT_PASSWORD", "guest")
 
     err := MB.Connect(
         os.Getenv("RABBIT_USER"),
