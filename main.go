@@ -6,22 +6,44 @@ import (
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/BieggerM/userservice/pkg/broker"
 	"encoding/json"
+	"os"
 )
 
 var DB database.Postgres
 var MB broker.RabbitMQ
 
+
 func main() {
-	MB.Connect()
-	r := gin.Default()
-	r.GET("/users", listUsers)
-	r.GET("/users/:username", getUser)
-	r.POST("/users", createUser)
-	r.PATCH("/users", updateUser)
-	r.DELETE("/users/", deleteUser)
-	r.Run(":8080")
-	MB.Disconnect()
+    os.Setenv("DB_HOST", "localhost")
+    os.Setenv("DB_PORT", "5432")
+    os.Setenv("DB_USER", "postgres")
+    os.Setenv("DB_PASSWORD", "password")
+    os.Setenv("DB_NAME", "recipe")
+    os.Setenv("RABBIT_HOST", "localhost")
+    os.Setenv("RABBIT_PORT", "5672")
+    os.Setenv("RABBIT_USER", "guest")
+    os.Setenv("RABBIT_PASSWORD", "guest")
+
+    err := MB.Connect(
+        os.Getenv("RABBIT_USER"),
+        os.Getenv("RABBIT_PASSWORD"),
+        os.Getenv("RABBIT_HOST"),
+        os.Getenv("RABBIT_PORT"),
+    )
+    if err != nil {
+        panic("Failed to connect to RabbitMQ")
+    }
+    defer MB.Disconnect()
+
+    r := gin.Default()
+    r.GET("/users", listUsers)
+    r.GET("/users/:username", getUser)
+    r.POST("/users", createUser)
+    r.PATCH("/users", updateUser)
+    r.DELETE("/users/", deleteUser)
+    r.Run(":8082")
 }
+
 
 func listUsers(c *gin.Context) {
 	users := DB.ListUsers()
