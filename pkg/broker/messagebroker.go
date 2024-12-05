@@ -80,7 +80,7 @@ func (r *RabbitMQ) Publish(exchange, routingKey string, body []byte) error {
         return fmt.Errorf("failed to publish message: %w", err)
     }
 
-    return nil
+	return nil
 }
 // Subscribe subscribes to a message from the RabbitMQ message broker
 // Implement GoRoutine to handle messages

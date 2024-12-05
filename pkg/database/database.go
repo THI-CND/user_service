@@ -5,7 +5,6 @@ import (
     "fmt"
     "github.com/BieggerM/userservice/pkg/models"
     _ "github.com/lib/pq"
-    "os"
 )
 
 type Database interface {
@@ -21,25 +20,15 @@ type Postgres struct {
 }
 
 // Connect connects to the PostgreSQL database
-func (p *Postgres) connect() {
-    dbHost := os.Getenv("DB_HOST")
-    dbPort := os.Getenv("DB_PORT")
-    dbUser := os.Getenv("DB_USER")
-    dbPassword := os.Getenv("DB_PASSWORD")
-    dbName := os.Getenv("DB_NAME")
+func (p *Postgres) Connect(dbHost, dbPort, dbUser, dbPassword, dbName string) error {
     var err error
     connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
     p.DB, err = sql.Open("postgres", connStr)
-    fmt.Println("Connected to PostgreSQL")
-    if err != nil {
-        fmt.Println(err)
-    }
+    return err
 }
 
 // SaveUser saves a user to the PostgreSQL database
 func (p *Postgres) SaveUser(user models.User) error {
-    p.connect()
-    defer p.DB.Close()
     _, err := p.DB.Exec("insert into users (username, firstname, lastname) values ($1, $2, $3)", user.Username, user.FirstName, user.LastName)
     if err != nil {
         fmt.Println(err)
@@ -51,8 +40,6 @@ func (p *Postgres) SaveUser(user models.User) error {
 
 // DeleteUser deletes a user from the PostgreSQL database
 func (p *Postgres) DeleteUser(username string) {
-    p.connect()
-    defer p.DB.Close()
     _, err := p.DB.Exec("delete from users where username = $1", username)
     if err != nil {
         fmt.Println(err)
@@ -61,8 +48,6 @@ func (p *Postgres) DeleteUser(username string) {
 
 // UpdateUser updates a user in the PostgreSQL database
 func (p *Postgres) UpdateUser(user models.User) models.User {
-    p.connect()
-    defer p.DB.Close()
     _, err := p.DB.Exec("update users set firstname = $1, lastname = $2 where username = $3", user.FirstName, user.LastName, user.Username)
     if err != nil {
         fmt.Println(err)
@@ -72,8 +57,6 @@ func (p *Postgres) UpdateUser(user models.User) models.User {
 
 // GetUser gets a user from the PostgreSQL database
 func (p *Postgres) GetUser(username string) models.User {
-    p.connect()
-    defer p.DB.Close()
 
     user := models.User{}
     err := p.DB.QueryRow("select username, firstname, lastname from users where username = $1", username).Scan(&user.Username, &user.FirstName, &user.LastName)
@@ -89,8 +72,6 @@ func (p *Postgres) GetUser(username string) models.User {
 
 // ListUsers lists all users from the PostgreSQL database
 func (p *Postgres) ListUsers() []models.User {
-    p.connect()
-    defer p.DB.Close()
     rows, err := p.DB.Query("select * from users")
     if err != nil {
         fmt.Println(err)
@@ -104,3 +85,6 @@ func (p *Postgres) ListUsers() []models.User {
     return users
 }
 
+func (p *Postgres) Close() error {
+    return p.DB.Close()
+}
