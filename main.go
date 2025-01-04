@@ -41,7 +41,7 @@ func main() {
 	defer DB.Close()
 
 	// Run migrations
-	if err := DB.RunMigrations("file:///home/bieggerm/dev/instaclone/userservice/migrations"); err != nil {
+	if err := DB.RunMigrations("file://migrations"); err != nil {
         logrus.Fatalf("Failed to run migrations: %v", err)
     } else {
 		logrus.Info("Migrations run successfully")
