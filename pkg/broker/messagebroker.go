@@ -26,7 +26,6 @@ func (r *RabbitMQ) Connect(rabbitmqUser, rabbitmqPassword, rabbitmqHost, rabbitm
         fmt.Println("Failed to connect to RabbitMQ:", err)
         return err
     }
-    fmt.Println("Connected to RabbitMQ")
     return nil
 }
 
