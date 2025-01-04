@@ -19,32 +19,35 @@ func main() {
     logrus.SetOutput(os.Stdout)
     logrus.SetLevel(logrus.InfoLevel)
 	
-    err := MB.Connect(
+	// Connect to RabbitMQ
+    if err := MB.Connect(
         os.Getenv("RABBIT_USER"),
         os.Getenv("RABBIT_PASSWORD"),
         os.Getenv("RABBIT_HOST"),
         os.Getenv("RABBIT_PORT"),
-    )
-    if err != nil {
-        logrus.Fatalf("Failed to connect to RabbitMQ: %v", err)
-    }
+    ); err != nil {
+		logrus.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	} else {
+		logrus.Infoln("Connected to RabbitMQ")
+	}
     defer MB.Disconnect()
 
 	  // Connect to PostgreSQL
-	dberr := DB.Connect(
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_PASSWORD"),
-		os.Getenv("DB_NAME"),
-	)
-	if dberr != nil {
-        logrus.Fatalf("Failed to connect to PostgreSQL: %v", dberr)
-    } else {
-        logrus.Info("Connected to PostgreSQL")
-    }
+	if dberr := DB.Connect(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME")); dberr != nil {
+		logrus.Fatalf("Failed to connect to PostgreSQL: %v", dberr)
+	} else {
+		logrus.Info("Connected to PostgreSQL")
+	}
 	defer DB.Close()
+
+	// Run migrations
+	if err := DB.RunMigrations("file:///home/bieggerm/dev/instaclone/userservice/migrations"); err != nil {
+        logrus.Fatalf("Failed to run migrations: %v", err)
+    } else {
+		logrus.Info("Migrations run successfully")
+	}
     
+	// Start the Gin server
     r := gin.Default()
     r.GET("/users", listUsers)
     r.GET("/users/:username", getUser)

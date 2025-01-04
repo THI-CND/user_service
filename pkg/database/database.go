@@ -5,6 +5,11 @@ import (
     "fmt"
     "github.com/BieggerM/userservice/pkg/models"
     _ "github.com/lib/pq"
+  
+    "github.com/golang-migrate/migrate/v4"
+    "github.com/golang-migrate/migrate/v4/database/postgres"
+    _ "github.com/golang-migrate/migrate/v4/source/file"
+
 )
 
 type Database interface {
@@ -83,6 +88,25 @@ func (p *Postgres) ListUsers() []models.User {
         users = append(users, user)
     }
     return users
+}
+
+// RunMigrations runs the database migrations
+func (p *Postgres) RunMigrations(migrationPath string) error {
+    driver, err := postgres.WithInstance(p.DB, &postgres.Config{})
+    if err != nil {
+        return fmt.Errorf("could not create postgres driver: %w", err)
+    }
+    m, err := migrate.NewWithDatabaseInstance(
+        migrationPath,
+        "postgres", driver)
+    if err != nil {
+        return fmt.Errorf("could not create migrate instance: %w", err)
+    }
+
+    if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+        return fmt.Errorf("could not run up migrations: %w", err)
+    }
+    return nil
 }
 
 func (p *Postgres) Close() error {
