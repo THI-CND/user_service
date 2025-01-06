@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/BieggerM/userservice/pkg/database"
+	"github.com/BieggerM/userservice/pkg/adapter/out/database"
 	"github.com/BieggerM/userservice/pkg/models"
-	"github.com/BieggerM/userservice/pkg/broker"
+	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"encoding/json"
 	"os"
 	"github.com/sirupsen/logrus"
@@ -21,11 +21,11 @@ func main() {
 	
 	// Connect to RabbitMQ
     if err := MB.Connect(
-        os.Getenv("RABBIT_USER"),
-        os.Getenv("RABBIT_PASSWORD"),
-        os.Getenv("RABBIT_HOST"),
-        os.Getenv("RABBIT_PORT"),
-    ); err != nil {
+		os.Getenv("RABBIT_USER"), 
+		os.Getenv("RABBIT_PASSWORD"), 
+		os.Getenv("RABBIT_HOST"), 
+		os.Getenv("RABBIT_PORT"), ); 
+		err != nil {
 		logrus.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	} else {
 		logrus.Infoln("Connected to RabbitMQ")
@@ -33,7 +33,13 @@ func main() {
     defer MB.Disconnect()
 
 	  // Connect to PostgreSQL
-	if dberr := DB.Connect(os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME")); dberr != nil {
+	if dberr := DB.Connect(
+		os.Getenv("DB_HOST"), 
+		os.Getenv("DB_PORT"), 
+		os.Getenv("DB_USER"), 
+		os.Getenv("DB_PASSWORD"), 
+		os.Getenv("DB_NAME")); 
+		dberr != nil {
 		logrus.Fatalf("Failed to connect to PostgreSQL: %v", dberr)
 	} else {
 		logrus.Info("Connected to PostgreSQL")
@@ -46,6 +52,8 @@ func main() {
     } else {
 		logrus.Info("Migrations run successfully")
 	}
+
+	createDemoUsers()
     
 	// Start the Gin server
     r := gin.Default()
@@ -124,4 +132,20 @@ func deleteUser(c *gin.Context) {
 		"message": "user deleted",
 		"username" : user.Username,
 	})
+}
+
+func createDemoUsers() {
+	demoUsers := []models.User{
+		{Username: "user1", FirstName: "John", LastName: "Doe"},
+		{Username: "user2", FirstName: "Jane", LastName: "Doe"},
+		{Username: "user3", FirstName: "Jim", LastName: "Beam"},
+	}
+
+	for _, user := range demoUsers {
+		if err := DB.SaveUser(user); err != nil {
+			logrus.Errorf("Failed to create demo user %s: %v", user.Username, err)
+		} else {
+			logrus.Infof("Created demo user %s", user.Username)
+		}
+	}
 }
