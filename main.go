@@ -124,6 +124,8 @@ func publishEvents(user models.User, c *gin.Context) error {
 func updateUser(c *gin.Context) {
 	var user models.User
 	c.ShouldBindBodyWithJSON(&user)
+	oldUser := DB.GetUser(user.Username)
+	
 	DB.UpdateUser(user)
 	c.JSON(200, gin.H{
 		"message": "user updated",
@@ -131,6 +133,21 @@ func updateUser(c *gin.Context) {
 		"firstname" : user.FirstName,
 		"lastname" : user.LastName,
 	})
+
+	// create a message for RabbitMQ
+	// Marshall user struct to JSON
+	// publish message to RabbitMQ exchange user with routing key "users.update"
+	msgBody, err := json.Marshal(map[string]interface{}{
+		"oldUser": oldUser,
+		"updatedUser": user,
+	})
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to marshal user to JSON"})
+	}
+	if err := MB.Publish("recipemanagement", "users.update", msgBody); err != nil {
+		c.JSON(500, gin.H{"error": "failed to publish message to RabbitMQ"})
+	}
+
 }
 
 func deleteUser(c *gin.Context) {
