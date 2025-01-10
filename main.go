@@ -69,7 +69,7 @@ func main() {
 	go r.Run(":8082")
 
 	// Start GRPC
-	lis, err := net.Listen("tcp", "9095")
+	lis, err := net.Listen("tcp", ":9095")
 	if err != nil {
 		logrus.Fatalf("Failed to listen: %v", err)
 	}
