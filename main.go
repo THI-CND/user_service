@@ -69,11 +69,11 @@ func main() {
 	go r.Run(":8082")
 
 	// Start GRPC
-	lis, err := net.Listen("tcp", ":9095")
+	lis, err := net.Listen("tcp", "9095")
 	if err != nil {
 		logrus.Fatalf("Failed to listen: %v", err)
 	}
-	log.Printf("Listening on %s", lis.Addr().String())
+	log.Printf("Listening for RPC on %s", lis.Addr().String())
 	s := grpc.NewServer()
 	user.RegisterUserServiceServer(s, &UserServiceServer{})
 	reflection.Register(s)

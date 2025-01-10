@@ -72,6 +72,46 @@ Method: GET
 Success Response:
 * Code: 200 OK
 
+## GRPC
+
+gRPC Interface
+The User Service also provides a gRPC interface with the following methods:
+
+### ListUsers
+RPC Method: ListUsers
+
+Request: Empty
+
+Response: UserListResponse
+
+### GetUser
+RPC Method: GetUser
+
+Request: GetUserRequest
+
+Response: UserResponse
+
+### CreateUser
+RPC Method: CreateUser
+
+Request: User
+
+Response: UserResponse
+
+### UpdateUser
+RPC Method: UpdateUser
+
+Request: User
+
+Response: UserResponse
+
+### DeleteUser
+RPC Method: DeleteUser
+
+Request: DeleteUserRequest
+
+Response: DeleteUserResponse
+
 ## MessageBroker
 The User Service uses RabbitMQ as a message broker to publish user creation messages. A simple interface is provided to allow for similar tools. The RabbitMQ struct in the messagebroker.go file handles the connection, publishing, and subscribing to RabbitMQ.
 
