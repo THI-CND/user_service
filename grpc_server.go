@@ -2,16 +2,32 @@ package main
 
 import (
 	"context"
+	"net"
 
-	
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/BieggerM/userservice/proto/user"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 
 
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
+}
+
+func StartGRPCServer() {
+	lis, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		logrus.Fatalf("Failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	user.RegisterUserServiceServer(s, &UserServiceServer{})
+	reflection.Register(s)
+	if err := s.Serve(lis); err != nil {
+		logrus.Fatalf("Failed to serve: %v", err)
+	}
 }
 
 
