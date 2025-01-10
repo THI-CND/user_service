@@ -57,11 +57,12 @@ func main() {
     
 	// Start the Gin server
     r := gin.Default()
-    r.GET("/users", listUsers)
-    r.GET("/users/:username", getUser)
-    r.POST("/users", createUser)
-    r.PATCH("/users", updateUser)
-    r.DELETE("/users/", deleteUser)
+	user_group := r.Group("/api/v1/users")
+    user_group.GET("", listUsers)
+    user_group.GET("/:username", getUser)
+    user_group.POST("", createUser)
+    user_group.PATCH("", updateUser)
+    user_group.DELETE("", deleteUser)
     r.Run(":8082")
 }
 
