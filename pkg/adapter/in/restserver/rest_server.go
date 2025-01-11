@@ -11,14 +11,14 @@ import (
 )
 
 type RestServer interface {
-	StartGinServer(MB broker.MessageBroker, DB database.Database)
+	StartRestServer(MB broker.MessageBroker, DB database.Database)
 }
 type GinServer struct {
 	DB database.Database
 	MB broker.MessageBroker
 }
 
-func (g *GinServer) StartGinServer(MB broker.MessageBroker, DB database.Database) {
+func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database) {
 	g.DB = DB
 	g.MB = MB
 	r := gin.Default()

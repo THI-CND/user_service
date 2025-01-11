@@ -40,7 +40,7 @@ func main() {
 	createDemoUsers()
 
 	// Start the Gin server
-	go RS.StartGinServer(MB, DB)
+	go RS.StartRestServer(MB, DB)
 
 	// Start GRPC
 	GS.StartGRPCServer(MB, DB)
