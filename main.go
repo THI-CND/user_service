@@ -3,15 +3,18 @@ package main
 import (
 	"os"
 
+	"github.com/BieggerM/userservice/pkg/adapter/in/grpcserver"
+	"github.com/BieggerM/userservice/pkg/adapter/in/restserver"
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/sirupsen/logrus"
-
 )
 
 var DB database.Postgres
 var MB broker.RabbitMQ
+var RS restserver.GinServer
+var GS grpcserver.UserServiceServer
 
 func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
@@ -20,19 +23,21 @@ func main() {
 
 	// Check Connection to Message Broker
 	prepareBroker()
+	defer MB.Disconnect()
 
 	// Connect to PostgreSQL
 	// Run migrations
 	prepareDatabase()
+	defer DB.Close()
 
 	// Create demo users
 	createDemoUsers()
 
 	// Start the Gin server
-	startGinServer()
+	go RS.StartGinServer(MB, DB)
 
 	// Start GRPC
-	StartGRPCServer()
+	GS.StartGRPCServer(MB, DB)
 
 }
 
@@ -46,7 +51,6 @@ func prepareBroker() {
 	} else {
 		logrus.Infoln("Connected to RabbitMQ")
 	}
-	defer MB.Disconnect()
 }
 
 func prepareDatabase() {
@@ -60,7 +64,6 @@ func prepareDatabase() {
 	} else {
 		logrus.Info("Connected to PostgreSQL")
 	}
-	defer DB.Close()
 
 	if err := DB.RunMigrations("file://migrations"); err != nil {
 		logrus.Fatalf("Failed to run migrations: %v", err)
@@ -68,8 +71,6 @@ func prepareDatabase() {
 		logrus.Info("Migrations run successfully")
 	}
 }
-
-
 
 func createDemoUsers() {
 	demoUsers := []models.User{
@@ -80,7 +81,7 @@ func createDemoUsers() {
 
 	for _, user := range demoUsers {
 		if err := DB.SaveUser(user); err != nil {
-			logrus.Errorf("Failed to create demo user %s: %v", user.Username, err)
+			logrus.Warnf("Failed to create demo user %s: %v", user.Username, err)
 		} else {
 			logrus.Infof("Created demo user %s", user.Username)
 		}
