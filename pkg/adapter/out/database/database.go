@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/BieggerM/userservice/pkg/models"
 	_ "github.com/lib/pq"
@@ -69,7 +70,7 @@ func (p *Postgres) GetUser(username string) models.User {
 	user := models.User{}
 	err := p.DB.QueryRow("select username, firstname, lastname from users where username = $1", username).Scan(&user.Username, &user.FirstName, &user.LastName)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			fmt.Println("No user found with the given username")
 		} else {
 			fmt.Println(err)
@@ -84,7 +85,7 @@ func (p *Postgres) ListUsers() []models.User {
 	if err != nil {
 		fmt.Println(err)
 	}
-	users := []models.User{}
+	var users []models.User
 	for rows.Next() {
 		user := models.User{}
 		rows.Scan(&user.Username, &user.FirstName, &user.LastName)
@@ -106,7 +107,7 @@ func (p *Postgres) RunMigrations(migrationPath string) error {
 		return fmt.Errorf("could not create migrate instance: %w", err)
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("could not run up migrations: %w", err)
 	}
 	return nil

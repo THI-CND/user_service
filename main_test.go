@@ -1,13 +1,9 @@
-
 package main
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
-
-
-
 
 func TestListUsers(t *testing.T) {
 	assert.True(t, true)
@@ -16,4 +12,3 @@ func TestListUsers(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	assert.True(t, true)
 }
-

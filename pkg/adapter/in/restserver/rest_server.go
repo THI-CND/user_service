@@ -22,12 +22,12 @@ func (g *GinServer) StartGinServer(MB broker.MessageBroker, DB database.Database
 	g.DB = DB
 	g.MB = MB
 	r := gin.Default()
-	user_group := r.Group("/api/v1/users")
-	user_group.GET("", g.listUsers)
-	user_group.GET("/:username", g.getUser)
-	user_group.POST("", g.createUser)
-	user_group.PATCH("", g.updateUser)
-	user_group.DELETE("", g.deleteUser)
+	userGroup := r.Group("/api/v1/users")
+	userGroup.GET("", g.listUsers)
+	userGroup.GET("/:username", g.getUser)
+	userGroup.POST("", g.createUser)
+	userGroup.PATCH("", g.updateUser)
+	userGroup.DELETE("", g.deleteUser)
 	logrus.Infof("Gin Server started on port %s", ":8082")
 	if err := r.Run(":8082"); err != nil {
 		logrus.Fatalf("Failed to run Gin server: %v", err)
