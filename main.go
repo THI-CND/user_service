@@ -11,15 +11,21 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var DB database.Postgres
-var MB broker.RabbitMQ
-var RS restserver.GinServer
-var GS grpcserver.UserServiceServer
+var DB database.Database
+var MB broker.MessageBroker
+var RS restserver.RestServer
+var GS grpcserver.GrpcServer
 
 func main() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetOutput(os.Stdout)
 	logrus.SetLevel(logrus.InfoLevel)
+
+	// Initialize Implementations
+	DB = &database.Postgres{}
+	MB = &broker.RabbitMQ{}
+	RS = &restserver.GinServer{}
+	GS = &grpcserver.UserServiceServer{}
 
 	// Check Connection to Message Broker
 	prepareBroker()

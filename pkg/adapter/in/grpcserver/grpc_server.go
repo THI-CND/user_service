@@ -13,13 +13,16 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+type GrpcServer interface {
+	StartGRPCServer(MB broker.MessageBroker, DB database.Database)
+}
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
-	DB database.Postgres
-	MB broker.RabbitMQ
+	DB database.Database
+	MB broker.MessageBroker
 }
 
-func (s *UserServiceServer) StartGRPCServer(MB broker.RabbitMQ, DB database.Postgres) {
+func (s *UserServiceServer) StartGRPCServer(MB broker.MessageBroker, DB database.Database) {
 	s.DB = DB
 	s.MB = MB
 	lis, err := net.Listen("tcp", ":8081")

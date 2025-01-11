@@ -10,12 +10,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type RestServer interface {
+	StartGinServer(MB broker.MessageBroker, DB database.Database)
+}
 type GinServer struct {
-	DB database.Postgres
-	MB broker.RabbitMQ
+	DB database.Database
+	MB broker.MessageBroker
 }
 
-func (g *GinServer) StartGinServer(MB broker.RabbitMQ, DB database.Postgres) {
+func (g *GinServer) StartGinServer(MB broker.MessageBroker, DB database.Database) {
 	g.DB = DB
 	g.MB = MB
 	r := gin.Default()
