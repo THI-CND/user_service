@@ -1,22 +1,42 @@
-package main
+package grpcserver
 
 import (
 	"context"
+	"net"
 
-	
+	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
+	"github.com/BieggerM/userservice/pkg/adapter/out/database"
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/BieggerM/userservice/proto/user"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
-
-
 
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
+	DB database.Postgres
+	MB broker.RabbitMQ
 }
 
+func (s *UserServiceServer) StartGRPCServer(MB broker.RabbitMQ, DB database.Postgres) {
+	s.DB = DB
+	s.MB = MB
+	lis, err := net.Listen("tcp", ":8081")
+	if err != nil {
+		logrus.Fatalf("Failed to listen: %v", err)
+	}
+	server := grpc.NewServer()
+	user.RegisterUserServiceServer(server, s)
+	reflection.Register(server)
+	logrus.Infoln("GRPC Server started")
+	if err := server.Serve(lis); err != nil {
+		logrus.Fatalf("Failed to serve: %v", err)
+	}
+}
 
 func (s *UserServiceServer) ListUsers(ctx context.Context, req *user.Empty) (*user.UserListResponse, error) {
-	users := DB.ListUsers()
+	users := s.DB.ListUsers()
 	var userList []*user.User
 	for _, u := range users {
 		userList = append(userList, &user.User{
@@ -29,7 +49,7 @@ func (s *UserServiceServer) ListUsers(ctx context.Context, req *user.Empty) (*us
 }
 
 func (s *UserServiceServer) GetUser(ctx context.Context, req *user.GetUserRequest) (*user.UserResponse, error) {
-	u := DB.GetUser(req.Username)
+	u := s.DB.GetUser(req.Username)
 	return &user.UserResponse{User: &user.User{
 		Username:  u.Username,
 		Firstname: u.FirstName,
@@ -43,7 +63,7 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *user.User) (*us
 		FirstName: req.Firstname,
 		LastName:  req.Lastname,
 	}
-	if err := DB.SaveUser(newUser); err != nil {
+	if err := s.DB.SaveUser(newUser); err != nil {
 		return nil, err
 	}
 	return &user.UserResponse{User: req}, nil
@@ -55,11 +75,11 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *user.User) (*us
 		FirstName: req.Firstname,
 		LastName:  req.Lastname,
 	}
-	DB.UpdateUser(updatedUser)
+	s.DB.UpdateUser(updatedUser)
 	return &user.UserResponse{User: req}, nil
 }
 
 func (s *UserServiceServer) DeleteUser(ctx context.Context, req *user.DeleteUserRequest) (*user.DeleteUserResponse, error) {
-	DB.DeleteUser(req.Username)
+	s.DB.DeleteUser(req.Username)
 	return &user.DeleteUserResponse{Message: "user deleted"}, nil
 }
