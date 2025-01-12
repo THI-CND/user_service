@@ -33,6 +33,7 @@ func (p *Postgres) Connect(dbHost, dbPort, dbUser, dbPassword, dbName string) er
 	var err error
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", dbHost, dbPort, dbUser, dbPassword, dbName)
 	p.DB, err = sql.Open("postgres", connStr)
+	err = p.DB.Ping()
 	return err
 }
 

@@ -53,9 +53,9 @@ func prepareBroker() {
 		os.Getenv("RABBIT_PASSWORD"),
 		os.Getenv("RABBIT_HOST"),
 		os.Getenv("RABBIT_PORT")); err != nil {
-		logrus.Fatalf("Failed to connect to RabbitMQ: %v", err)
+		logrus.Fatalf("Failed to connect to MessageBroker: %v", err)
 	} else {
-		logrus.Infoln("Connected to RabbitMQ")
+		logrus.Infoln("Connected to MessageBroker")
 	}
 }
 
@@ -66,9 +66,9 @@ func prepareDatabase() {
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME")); dberr != nil {
-		logrus.Fatalf("Failed to connect to PostgreSQL: %v", dberr)
+		logrus.Fatalf("Failed to connect to Database: %v", dberr)
 	} else {
-		logrus.Info("Connected to PostgreSQL")
+		logrus.Info("Connected to Database")
 	}
 
 	if err := DB.RunMigrations("file://migrations"); err != nil {
