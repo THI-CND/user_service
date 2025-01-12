@@ -1,25 +1,29 @@
 package main
 
 import (
-	"os"
-
 	"github.com/BieggerM/userservice/pkg/adapter/in/grpcserver"
 	"github.com/BieggerM/userservice/pkg/adapter/in/restserver"
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
+	"github.com/BieggerM/userservice/pkg/adapter/out/logger"
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/sirupsen/logrus"
+	"os"
+	"strconv"
 )
+
+// Levels defines which log levels trigger the hook.
 
 var DB database.Database
 var MB broker.MessageBroker
 var RS restserver.RestServer
 var GS grpcserver.GrpcServer
+var rlog *logger.RemoteLogger
 
 func main() {
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetOutput(os.Stdout)
-	logrus.SetLevel(logrus.InfoLevel)
+	// Create a new logrus logger
+	setupRemoteLogging()
+	defer rlog.Close()
 
 	// Initialize Implementations
 	DB = &database.Postgres{}
@@ -47,15 +51,29 @@ func main() {
 
 }
 
+func setupRemoteLogging() {
+	fluentPort, ferr := strconv.Atoi(os.Getenv("FLUENTD_PORT"))
+	if ferr != nil {
+		logrus.Fatalf("Invalid fluentd port number: %v", ferr)
+	}
+	var err error
+	rlog, err = logger.NewLogger(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
+	if err != nil {
+		rlog.Fatal("Failed to create logger: %v", map[string]interface{}{
+			"error": err,
+		})
+	}
+}
+
 func prepareBroker() {
 	if err := MB.Connect(
 		os.Getenv("RABBIT_USER"),
 		os.Getenv("RABBIT_PASSWORD"),
 		os.Getenv("RABBIT_HOST"),
 		os.Getenv("RABBIT_PORT")); err != nil {
-		logrus.Fatalf("Failed to connect to MessageBroker: %v", err)
+		rlog.Fatal("Failed to connect to MessageBroker:", "error", err)
 	} else {
-		logrus.Infoln("Connected to MessageBroker")
+		rlog.Info("Connected to MessageBroker", "host", os.Getenv("RABBIT_HOST"), "port", os.Getenv("RABBIT_PORT"))
 	}
 }
 
@@ -66,15 +84,15 @@ func prepareDatabase() {
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_NAME")); dberr != nil {
-		logrus.Fatalf("Failed to connect to Database: %v", dberr)
+		rlog.Fatal("Failed to connect to Database: ", "error", dberr)
 	} else {
-		logrus.Info("Connected to Database")
+		rlog.Info("Connected to Database", "host", os.Getenv("DB_HOST"), "port", os.Getenv("DB_PORT"))
 	}
 
 	if err := DB.RunMigrations("file://migrations"); err != nil {
-		logrus.Fatalf("Failed to run migrations: %v", err)
+		rlog.Warn("Failed to run migrations", "error", err)
 	} else {
-		logrus.Info("Migrations run successfully")
+		rlog.Info("Migrations run successfully", "path", "file://migrations")
 	}
 }
 
@@ -87,9 +105,9 @@ func createDemoUsers() {
 
 	for _, user := range demoUsers {
 		if err := DB.SaveUser(user); err != nil {
-			logrus.Warnf("Failed to create demo user %s: %v", user.Username, err)
+			logrus.Warn("Failed to create demo user", "", "")
 		} else {
-			logrus.Infof("Created demo user %s", user.Username)
+			logrus.Info("Created demo user %s", "user", user.Username)
 		}
 	}
 }
