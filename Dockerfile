@@ -21,10 +21,11 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the binary from the build stage
-COPY --from=builder /userservice /userservice
+COPY --from=builder /userservice userservice 
+COPY --from=builder /app/migrations migrations
 
 # Optional: Document the port the application will listen on
 EXPOSE 8082
 
 # Run
-CMD ["/userservice"]
+CMD ["/app/userservice"]
