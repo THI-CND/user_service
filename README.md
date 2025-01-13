@@ -8,6 +8,10 @@ This is a User Service built with Go, Gin, PostgreSQL, and RabbitMQ. It provides
 - Docker
 - Docker Compose
 
+## Architecture
+![Visualization of Software Architekture](./media/User-Service.drawio.png)
+This service provides a rest and a grpc endpoint by standard. As the user-service is just a Rest/GRPC Interface Layer for the DB with no internal logic, all functionality is provided in the Endpoint Implementation itself, without relying on some form of central service layer.
+
 ## Getting Started
 
 ### Running with Docker Compose
