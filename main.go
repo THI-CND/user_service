@@ -107,7 +107,7 @@ func createDemoUsers() {
 		if err := DB.SaveUser(user); err != nil {
 			logrus.Warn("Failed to create demo user", "", "")
 		} else {
-			logrus.Info("Created demo user %s", "user", user.Username)
+			logrus.Infof("Created demo user %s", user.Username)
 		}
 	}
 }
