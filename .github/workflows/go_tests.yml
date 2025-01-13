@@ -17,8 +17,13 @@ jobs:
         with:
           go-version: '1.23'
 
+      - name: change Dir
+        run: cd src
+
       - name: Install dependencies
         run: go mod tidy
+        working-directory: src
 
       - name: Run tests
         run: go test ./...
+        working-directory: src
