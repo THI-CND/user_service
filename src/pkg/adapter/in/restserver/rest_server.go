@@ -2,6 +2,7 @@ package restserver
 
 import (
 	"encoding/json"
+	"github.com/BieggerM/userservice/pkg/adapter/out/authenticationprovider"
 
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
@@ -12,18 +13,24 @@ import (
 )
 
 type RestServer interface {
-	StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger)
+	StartRestServer(
+		MB broker.MessageBroker,
+		DB database.Database,
+		rlog logger.Logger,
+		provider authenticationprovider.AuthenticationProvider)
 }
 type GinServer struct {
 	DB   database.Database
 	MB   broker.MessageBroker
 	rlog logger.Logger
+	auth authenticationprovider.AuthenticationProvider
 }
 
-func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger) {
+func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger, auth authenticationprovider.AuthenticationProvider) {
 	g.DB = DB
 	g.MB = MB
 	g.rlog = rlog
+	g.auth = auth
 	r := gin.Default()
 	userGroup := r.Group("/api/v1/users")
 	userGroup.GET("", g.listUsers)
@@ -31,10 +38,36 @@ func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Databas
 	userGroup.POST("", g.createUser)
 	userGroup.PATCH("", g.updateUser)
 	userGroup.DELETE("", g.deleteUser)
+	userGroup.GET("/login", g.login)
 	logrus.Infof("Gin Server started on port %s", ":8082")
 	if err := r.Run(":8082"); err != nil {
 		logrus.Fatalf("Failed to run Gin server: %v", err)
 	}
+}
+
+func (g *GinServer) login(c *gin.Context) {
+
+	username := c.Request.Header.Get("username")
+	if username == "" {
+		c.JSON(401, gin.H{"error": "username not provided"})
+		return
+	}
+	// check if user exists in database
+	_, err := g.DB.GetUser(username)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "user not found"})
+		return
+	}
+	// retrieve JWT from authentication provider
+
+	jwt, err := g.auth.RetrieveJWT(username)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "failed to authenticate user"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"jwt": jwt,
+	})
 }
 
 func (g *GinServer) listUsers(c *gin.Context) {
