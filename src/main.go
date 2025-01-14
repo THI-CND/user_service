@@ -18,18 +18,19 @@ var DB database.Database
 var MB broker.MessageBroker
 var RS restserver.RestServer
 var GS grpcserver.GrpcServer
-var rlog *logger.RemoteLogger
+var rlog logger.Logger
 
-func main() {
-	// Create a new logrus logger
-	setupRemoteLogging()
-	defer rlog.Close()
-
+func main() {	
 	// Initialize Implementations
+	rlog = &logger.RemoteLogger{}
 	DB = &database.Postgres{}
 	MB = &broker.RabbitMQ{}
 	RS = &restserver.GinServer{}
 	GS = &grpcserver.UserServiceServer{}
+
+	// Setup remote logging
+	setupRemoteLogging()
+	defer rlog.Close()
 
 	// Check Connection to Message Broker
 	prepareBroker()
@@ -44,10 +45,10 @@ func main() {
 	createDemoUsers()
 
 	// Start the Gin server
-	go RS.StartRestServer(MB, DB)
+	go RS.StartRestServer(MB, DB, rlog)
 
 	// Start GRPC
-	GS.StartGRPCServer(MB, DB)
+	GS.StartGRPCServer(MB, DB, rlog)
 
 }
 
@@ -57,7 +58,7 @@ func setupRemoteLogging() {
 		logrus.Fatalf("Invalid fluentd port number: %v", ferr)
 	}
 	var err error
-	rlog, err = logger.NewLogger(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
+	 err = rlog.Setup(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
 	if err != nil {
 		logrus.Fatalf("Failed to create remote logger: %v", err)
 	}

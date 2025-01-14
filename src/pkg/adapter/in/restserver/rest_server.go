@@ -5,22 +5,25 @@ import (
 
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
+	"github.com/BieggerM/userservice/pkg/adapter/out/logger"
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
 type RestServer interface {
-	StartRestServer(MB broker.MessageBroker, DB database.Database)
+	StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger)
 }
 type GinServer struct {
 	DB database.Database
 	MB broker.MessageBroker
+	rlog logger.Logger
 }
 
-func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database) {
+func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger) {
 	g.DB = DB
 	g.MB = MB
+	g.rlog = rlog
 	r := gin.Default()
 	userGroup := r.Group("/api/v1/users")
 	userGroup.GET("", g.listUsers)
@@ -61,6 +64,7 @@ func (g *GinServer) createUser(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "failed to publish events to RabbitMQ"})
 		return
 	}
+	g.rlog.Info("User created", "username", user.Username)
 }
 
 func (g *GinServer) updateUser(c *gin.Context) {
@@ -96,6 +100,7 @@ func (g *GinServer) deleteUser(c *gin.Context) {
 		"message":  "user deleted",
 		"username": user.Username,
 	})
+	g.rlog.Info("User deleted", "username", user.Username)
 }
 
 func (g *GinServer) publishEvents(user models.User, c *gin.Context) error {

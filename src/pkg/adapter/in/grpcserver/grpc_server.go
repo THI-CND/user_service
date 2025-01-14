@@ -6,6 +6,7 @@ import (
 
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
+	"github.com/BieggerM/userservice/pkg/adapter/out/logger"
 	"github.com/BieggerM/userservice/pkg/models"
 	"github.com/BieggerM/userservice/proto/user"
 	"github.com/sirupsen/logrus"
@@ -14,17 +15,19 @@ import (
 )
 
 type GrpcServer interface {
-	StartGRPCServer(MB broker.MessageBroker, DB database.Database)
+	StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger)
 }
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
 	DB database.Database
 	MB broker.MessageBroker
+	rlog logger.Logger
 }
 
-func (s *UserServiceServer) StartGRPCServer(MB broker.MessageBroker, DB database.Database) {
+func (s *UserServiceServer) StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger) {
 	s.DB = DB
 	s.MB = MB
+	s.rlog = rlog
 	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		logrus.Fatalf("Failed to listen: %v", err)
@@ -69,6 +72,7 @@ func (s *UserServiceServer) CreateUser(ctx context.Context, req *user.User) (*us
 	if err := s.DB.SaveUser(newUser); err != nil {
 		return nil, err
 	}
+	s.rlog.Info("User created", "username", newUser.Username)
 	return &user.UserResponse{User: req}, nil
 }
 

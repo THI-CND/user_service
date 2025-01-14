@@ -6,28 +6,40 @@ import (
 	"time"
 )
 
+type Logger interface {
+	Setup(fluentHost string, fluentPort int, tag string) error
+	Close() error
+    Info(message string, fields ...interface{})
+    Warn(message string, fields ...interface{})
+	Error(message string, fields ...interface{})
+	Debug(message string, fields ...interface{})
+	Fatal(message string, fields ...interface{})
+}
+
 type RemoteLogger struct {
 	fluentLogger *fluent.Fluent
 	tag          string
 }
 
-func NewLogger(fluentHost string, fluentPort int, tag string) (*RemoteLogger, error) {
+func (l* RemoteLogger)  Setup(fluentHost string, fluentPort int, tag string) (error) {
 	fluentLogger, err := fluent.New(fluent.Config{
 		FluentPort: fluentPort,
 		FluentHost: fluentHost,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &RemoteLogger{
-		fluentLogger: fluentLogger,
-		tag:          tag,
-	}, nil
+	l.fluentLogger = fluentLogger
+	l.tag = tag
+	return nil
 }
 
-func (l *RemoteLogger) Close() {
-	l.fluentLogger.Close()
+func (l *RemoteLogger) Close() (error) {
+	err := l.fluentLogger.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (l *RemoteLogger) logWithFields(level logrus.Level, message string, fields ...interface{}) {
