@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/BieggerM/userservice/pkg/adapter/in/grpcserver"
 	"github.com/BieggerM/userservice/pkg/adapter/in/restserver"
+	"github.com/BieggerM/userservice/pkg/adapter/out/authenticationprovider"
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
 	"github.com/BieggerM/userservice/pkg/adapter/out/logger"
@@ -19,14 +20,16 @@ var MB broker.MessageBroker
 var RS restserver.RestServer
 var GS grpcserver.GrpcServer
 var rlog logger.Logger
+var auth authenticationprovider.AuthenticationProvider
 
-func main() {	
+func main() {
 	// Initialize Implementations
 	rlog = &logger.RemoteLogger{}
 	DB = &database.Postgres{}
 	MB = &broker.RabbitMQ{}
 	RS = &restserver.GinServer{}
 	GS = &grpcserver.UserServiceServer{}
+	auth = &authenticationprovider.AuthProvider{}
 
 	// Setup remote logging
 	setupRemoteLogging()
@@ -45,7 +48,7 @@ func main() {
 	createDemoUsers()
 
 	// Start the Gin server
-	go RS.StartRestServer(MB, DB, rlog)
+	go RS.StartRestServer(MB, DB, rlog, auth)
 
 	// Start GRPC
 	GS.StartGRPCServer(MB, DB, rlog)
@@ -58,7 +61,7 @@ func setupRemoteLogging() {
 		logrus.Fatalf("Invalid fluentd port number: %v", ferr)
 	}
 	var err error
-	 err = rlog.Setup(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
+	err = rlog.Setup(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
 	if err != nil {
 		logrus.Fatalf("Failed to create remote logger: %v", err)
 	}
