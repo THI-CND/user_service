@@ -20,7 +20,7 @@ func (a *AuthProvider) RetrieveJWT(username string) (string, error) {
 		return "",
 			err
 	}
-	req.Header.Set("username", username)
+	req.Header.Set("user_id", username)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
