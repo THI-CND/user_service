@@ -2,6 +2,8 @@ package grpcserver
 
 import (
 	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net"
 
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
@@ -19,8 +21,8 @@ type GrpcServer interface {
 }
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
-	DB database.Database
-	MB broker.MessageBroker
+	DB   database.Database
+	MB   broker.MessageBroker
 	rlog logger.Logger
 }
 
@@ -55,7 +57,10 @@ func (s *UserServiceServer) ListUsers(ctx context.Context, req *user.Empty) (*us
 }
 
 func (s *UserServiceServer) GetUser(ctx context.Context, req *user.GetUserRequest) (*user.UserResponse, error) {
-	u := s.DB.GetUser(req.Username)
+	u, err := s.DB.GetUser(req.Username)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "user not found")
+	}
 	return &user.UserResponse{User: &user.User{
 		Username:  u.Username,
 		Firstname: u.FirstName,

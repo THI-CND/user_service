@@ -17,7 +17,7 @@ type Database interface {
 	SaveUser(user models.User) error
 	DeleteUser(username string)
 	UpdateUser(user models.User) models.User
-	GetUser(username string) models.User
+	GetUser(username string) (models.User, error)
 	ListUsers() []models.User
 	RunMigrations(migrationPath string) error
 	Close() error
@@ -66,18 +66,18 @@ func (p *Postgres) UpdateUser(user models.User) models.User {
 }
 
 // GetUser gets a user from the PostgreSQL database
-func (p *Postgres) GetUser(username string) models.User {
-
+func (p *Postgres) GetUser(username string) (models.User, error) {
 	user := models.User{}
 	err := p.DB.QueryRow("select username, firstname, lastname from users where username = $1", username).Scan(&user.Username, &user.FirstName, &user.LastName)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			fmt.Println("No user found with the given username")
+			return user, err
 		} else {
 			fmt.Println(err)
 		}
 	}
-	return user
+	return user, nil
 }
 
 // ListUsers lists all users from the PostgreSQL database

@@ -15,8 +15,8 @@ type RestServer interface {
 	StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger)
 }
 type GinServer struct {
-	DB database.Database
-	MB broker.MessageBroker
+	DB   database.Database
+	MB   broker.MessageBroker
 	rlog logger.Logger
 }
 
@@ -45,7 +45,11 @@ func (g *GinServer) listUsers(c *gin.Context) {
 }
 
 func (g *GinServer) getUser(c *gin.Context) {
-	user := g.DB.GetUser(c.Param("username"))
+	user, err := g.DB.GetUser(c.Param("username"))
+	if err != nil {
+		c.JSON(404, gin.H{"error": "user not found"})
+		return
+	}
 	c.JSON(200, gin.H{
 		"username":  user.Username,
 		"firstname": user.FirstName,
@@ -70,7 +74,11 @@ func (g *GinServer) createUser(c *gin.Context) {
 func (g *GinServer) updateUser(c *gin.Context) {
 	var user models.User
 	c.ShouldBindBodyWithJSON(&user)
-	oldUser := g.DB.GetUser(user.Username)
+	oldUser, err := g.DB.GetUser(user.Username)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "user not found"})
+		return
+	}
 
 	g.DB.UpdateUser(user)
 	c.JSON(200, gin.H{
