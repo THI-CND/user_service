@@ -16,7 +16,7 @@ type Database interface {
 	Connect(dbHost, dbPort, dbUser, dbPassword, dbName string) error
 	SaveUser(user models.User) error
 	DeleteUser(username string)
-	UpdateUser(user models.User) models.User
+	UpdateUser(user models.User) (models.User, error)
 	GetUser(username string) (models.User, error)
 	ListUsers() []models.User
 	RunMigrations(migrationPath string) error
@@ -39,13 +39,19 @@ func (p *Postgres) Connect(dbHost, dbPort, dbUser, dbPassword, dbName string) er
 
 // SaveUser saves a user to the PostgreSQL database
 func (p *Postgres) SaveUser(user models.User) error {
-	_, err := p.DB.Exec("insert into users (username, firstname, lastname) values ($1, $2, $3)", user.Username, user.FirstName, user.LastName)
+	var exists bool
+	err := p.DB.QueryRow("select exists(select 1 from users where username=$1)", user.Username).Scan(&exists)
 	if err != nil {
-		fmt.Println(err)
+		return err
+	}
+	if exists {
+		return errors.New("user already exists")
+	}
+	_, err = p.DB.Exec("insert into users (username, firstname, lastname) values ($1, $2, $3)", user.Username, user.FirstName, user.LastName)
+	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
 // DeleteUser deletes a user from the PostgreSQL database
@@ -57,12 +63,19 @@ func (p *Postgres) DeleteUser(username string) {
 }
 
 // UpdateUser updates a user in the PostgreSQL database
-func (p *Postgres) UpdateUser(user models.User) models.User {
-	_, err := p.DB.Exec("update users set firstname = $1, lastname = $2 where username = $3", user.FirstName, user.LastName, user.Username)
+func (p *Postgres) UpdateUser(user models.User) (models.User, error) {
+	res, err := p.DB.Exec("update users set firstname = $1, lastname = $2 where username = $3", user.FirstName, user.LastName, user.Username)
 	if err != nil {
-		fmt.Println(err)
+		return user, err
 	}
-	return user
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return user, err
+	}
+	if rowsAffected == 0 {
+		return user, errors.New("user does not exist")
+	}
+	return user, nil
 }
 
 // GetUser gets a user from the PostgreSQL database
