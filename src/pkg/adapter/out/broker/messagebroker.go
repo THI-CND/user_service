@@ -8,7 +8,7 @@ import (
 // MessageBroker is the interface for the message broker
 type MessageBroker interface {
 	Connect(rabbitmqUser, rabbitmqPassword, rabbitmqHost, rabbitmqPort string) error
-	Disconnect() error
+	Close() error
 	Publish(exchange, routingKey string, body []byte) error
 	Subscribe(exchange, key string) error
 }
@@ -31,7 +31,7 @@ func (r *RabbitMQ) Connect(rabbitmqUser, rabbitmqPassword, rabbitmqHost, rabbitm
 }
 
 // Disconnect disconnects from the RabbitMQ message broker
-func (r *RabbitMQ) Disconnect() error {
+func (r *RabbitMQ) Close() error {
 	if r.Conn != nil {
 		return r.Conn.Close()
 	}

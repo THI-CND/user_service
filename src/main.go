@@ -33,7 +33,7 @@ func main() {
 
 	// Check Connection to Message Broker
 	prepareBroker()
-	defer MB.Disconnect()
+	defer MB.Close()
 
 	// Connect to PostgreSQL
 	// Run migrations
@@ -59,9 +59,7 @@ func setupRemoteLogging() {
 	var err error
 	rlog, err = logger.NewLogger(os.Getenv("FLUENTD_HOST"), fluentPort, "user-service")
 	if err != nil {
-		rlog.Fatal("Failed to create logger: %v", map[string]interface{}{
-			"error": err,
-		})
+		logrus.Fatalf("Failed to create remote logger: %v", err)
 	}
 }
 
