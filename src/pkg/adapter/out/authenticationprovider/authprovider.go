@@ -41,8 +41,9 @@ func (a *AuthProvider) RetrieveJWT(username string) (string, error) {
 }
 
 func (a *GRPCAuthProvider) RetrieveJWT(username string) (string, error) {
+	authServiceURL := os.Getenv("AUTH_SERVICE_URL")
 	conn, err := grpc.NewClient(
-		"localhost:50081",
+		authServiceURL,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {
@@ -53,7 +54,7 @@ func (a *GRPCAuthProvider) RetrieveJWT(username string) (string, error) {
 	client := pb.NewAuthServiceClient(conn)
 
 	// Call the Auth method
-	authResponse, err := client.Auth(context.Background(), &pb.AuthRequest{UserId: "user123"})
+	authResponse, err := client.Auth(context.Background(), &pb.AuthRequest{UserId: username})
 	if err != nil {
 		log.Fatalf("Could not authenticate: %v", err)
 	}

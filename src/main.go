@@ -29,7 +29,7 @@ func main() {
 	MB = &broker.RabbitMQ{}
 	RS = &restserver.GinServer{}
 	GS = &grpcserver.UserServiceServer{}
-	auth = &authenticationprovider.AuthProvider{}
+	auth = &authenticationprovider.GRPCAuthProvider{}
 
 	// Setup remote logging
 	setupRemoteLogging()
