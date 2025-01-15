@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "github.com/BieggerM/proto/auth";
+package auth;
+
+service AuthService {
+  rpc Auth (AuthRequest) returns (AuthResponse);
+  rpc Protected (ProtectedRequest) returns (ProtectedResponse);
+}
+
+message AuthRequest {
+  string user_id = 1;
+}
+
+message AuthResponse {
+  string token = 1;
+}
+
+message ProtectedRequest {
+  string token = 1;
+}
+
+message ProtectedResponse {
+  string message = 1;
+}
