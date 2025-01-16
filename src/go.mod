@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/fluent/fluent-logger-golang v1.9.0
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-migrate/migrate/v4 v4.18.1
 	github.com/lib/pq v1.10.9
 	github.com/rabbitmq/amqp091-go v1.10.0

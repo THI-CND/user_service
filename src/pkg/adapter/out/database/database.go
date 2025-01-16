@@ -47,7 +47,7 @@ func (p *Postgres) SaveUser(user models.User) error {
 	if exists {
 		return errors.New("user already exists")
 	}
-	_, err = p.DB.Exec("insert into users (username, firstname, lastname) values ($1, $2, $3)", user.Username, user.FirstName, user.LastName)
+	_, err = p.DB.Exec("insert into users (username, firstname, lastname, password) values ($1, $2, $3, $4)", user.Username, user.FirstName, user.LastName, user.Password)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (p *Postgres) UpdateUser(user models.User) (models.User, error) {
 // GetUser gets a user from the PostgreSQL database
 func (p *Postgres) GetUser(username string) (models.User, error) {
 	user := models.User{}
-	err := p.DB.QueryRow("select username, firstname, lastname from users where username = $1", username).Scan(&user.Username, &user.FirstName, &user.LastName)
+	err := p.DB.QueryRow("select username, firstname, lastname, password from users where username = $1", username).Scan(&user.Username, &user.FirstName, &user.LastName, &user.Password)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			fmt.Println("No user found with the given username")
@@ -95,7 +95,7 @@ func (p *Postgres) GetUser(username string) (models.User, error) {
 
 // ListUsers lists all users from the PostgreSQL database
 func (p *Postgres) ListUsers() []models.User {
-	rows, err := p.DB.Query("select * from users")
+	rows, err := p.DB.Query("select username, firstname, lastname from users")
 	if err != nil {
 		fmt.Println(err)
 	}

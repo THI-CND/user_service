@@ -2,7 +2,8 @@ package restserver
 
 import (
 	"encoding/json"
-	"github.com/BieggerM/userservice/pkg/adapter/out/authenticationprovider"
+	auth "github.com/BieggerM/userservice/pkg/service/auth"
+	"strings"
 
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
@@ -17,16 +18,16 @@ type RestServer interface {
 		MB broker.MessageBroker,
 		DB database.Database,
 		rlog logger.Logger,
-		provider authenticationprovider.AuthenticationProvider)
+		authservice auth.AuthService)
 }
 type GinServer struct {
 	DB   database.Database
 	MB   broker.MessageBroker
 	rlog logger.Logger
-	auth authenticationprovider.AuthenticationProvider
+	auth auth.AuthService
 }
 
-func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger, auth authenticationprovider.AuthenticationProvider) {
+func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger, auth auth.AuthService) {
 	g.DB = DB
 	g.MB = MB
 	g.rlog = rlog
@@ -38,7 +39,8 @@ func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Databas
 	userGroup.POST("", g.createUser)
 	userGroup.PATCH("", g.updateUser)
 	userGroup.DELETE("", g.deleteUser)
-	userGroup.GET("/login", g.login)
+	userGroup.POST("/login", g.login)
+	userGroup.GET("/auth", g.validateJWT)
 	logrus.Infof("Gin Server started on port %s", ":8082")
 	if err := r.Run(":8082"); err != nil {
 		logrus.Fatalf("Failed to run Gin server: %v", err)
@@ -46,27 +48,56 @@ func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Databas
 }
 
 func (g *GinServer) login(c *gin.Context) {
-
-	username := c.Request.Header.Get("username")
-	if username == "" {
-		c.JSON(401, gin.H{"error": "username not provided"})
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader == "" {
+		c.JSON(401, gin.H{"error": "Authorization header not provided"})
 		return
 	}
-	// check if user exists in database
-	_, err := g.DB.GetUser(username)
+	credentials := strings.SplitN(string(authHeader), ":", 2)
+	if len(credentials) != 2 {
+		c.JSON(401, gin.H{"error": "Invalid Authorization header format"})
+		return
+	}
+	username, password := credentials[0], credentials[1]
+
+	user, err := g.DB.GetUser(username)
 	if err != nil {
 		c.JSON(401, gin.H{"error": "user not found"})
 		return
 	}
-	// retrieve JWT from authentication provider
 
-	jwt, err := g.auth.RetrieveJWT(username)
+	if password != user.Password {
+		c.JSON(401, gin.H{"error": "incorrect password"})
+		return
+	}
+	// retrieve JWT from authentication provider
+	jwt, err := g.auth.GenerateJWT(username)
 	if err != nil {
 		c.JSON(401, gin.H{"error": "failed to authenticate user"})
 		return
 	}
 	c.JSON(200, gin.H{
 		"jwt": jwt,
+	})
+}
+
+func (g *GinServer) validateJWT(c *gin.Context) {
+	token := c.Request.Header.Get("Authorization")
+	if token == "" {
+		c.JSON(401, gin.H{"error": "Authorization header not provided"})
+		return
+	}
+	valid, err := g.auth.ValidateJWT(token)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "failed to validate JWT"})
+		return
+	}
+	if !valid {
+		c.JSON(401, gin.H{"error": "invalid JWT"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"message": "valid JWT",
 	})
 }
 
