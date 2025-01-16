@@ -3,11 +3,11 @@ package main
 import (
 	"github.com/BieggerM/userservice/pkg/adapter/in/grpcserver"
 	"github.com/BieggerM/userservice/pkg/adapter/in/restserver"
-	"github.com/BieggerM/userservice/pkg/adapter/out/authenticationprovider"
 	"github.com/BieggerM/userservice/pkg/adapter/out/broker"
 	"github.com/BieggerM/userservice/pkg/adapter/out/database"
 	"github.com/BieggerM/userservice/pkg/adapter/out/logger"
 	"github.com/BieggerM/userservice/pkg/models"
+	"github.com/BieggerM/userservice/pkg/service/auth"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strconv"
@@ -20,7 +20,7 @@ var MB broker.MessageBroker
 var RS restserver.RestServer
 var GS grpcserver.GrpcServer
 var rlog logger.Logger
-var auth authenticationprovider.AuthenticationProvider
+var authService auth.AuthService
 
 func main() {
 	// Initialize Implementations
@@ -29,11 +29,14 @@ func main() {
 	MB = &broker.RabbitMQ{}
 	RS = &restserver.GinServer{}
 	GS = &grpcserver.UserServiceServer{}
-	auth = &authenticationprovider.GRPCAuthProvider{}
+	authService = &auth.Auth{}
 
 	// Setup remote logging
 	setupRemoteLogging()
 	defer rlog.Close()
+
+	// Setup AuthService
+	authService.SetupRSAKeys()
 
 	// Check Connection to Message Broker
 	prepareBroker()
@@ -48,10 +51,10 @@ func main() {
 	createDemoUsers()
 
 	// Start the Gin server
-	go RS.StartRestServer(MB, DB, rlog, auth)
+	go RS.StartRestServer(MB, DB, rlog, authService)
 
 	// Start GRPC
-	GS.StartGRPCServer(MB, DB, rlog)
+	GS.StartGRPCServer(MB, DB, rlog, authService)
 
 }
 
@@ -100,9 +103,9 @@ func prepareDatabase() {
 
 func createDemoUsers() {
 	demoUsers := []models.User{
-		{Username: "user1", FirstName: "John", LastName: "Doe"},
-		{Username: "user2", FirstName: "Jane", LastName: "Doe"},
-		{Username: "user3", FirstName: "Jim", LastName: "Beam"},
+		{Username: "user1", FirstName: "John", LastName: "Doe", Password: "password"},
+		{Username: "user2", FirstName: "Jane", LastName: "Doe", Password: "password"},
+		{Username: "user3", FirstName: "Jim", LastName: "Beam", Password: "password"},
 	}
 
 	for _, user := range demoUsers {

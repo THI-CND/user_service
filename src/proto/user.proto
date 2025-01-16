@@ -8,7 +8,9 @@ service UserService {
   rpc CreateUser (User) returns (UserResponse);
   rpc UpdateUser (User) returns (UserResponse);
   rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
+  rpc Auth (AuthRequest) returns (AuthResponse);
 }
+
 
 message Empty {}
 
@@ -35,5 +37,13 @@ message DeleteUserRequest {
 }
 
 message DeleteUserResponse {
+  string message = 1;
+}
+
+message AuthRequest {
+  string token = 1;
+}
+
+message AuthResponse {
   string message = 1;
 }

@@ -2,6 +2,7 @@ package grpcserver
 
 import (
 	"context"
+	"github.com/BieggerM/userservice/pkg/service/auth"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net"
@@ -17,19 +18,21 @@ import (
 )
 
 type GrpcServer interface {
-	StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger)
+	StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger, auth auth.AuthService)
 }
 type UserServiceServer struct {
 	user.UnimplementedUserServiceServer
 	DB   database.Database
 	MB   broker.MessageBroker
 	rlog logger.Logger
+	auth auth.AuthService
 }
 
-func (s *UserServiceServer) StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger) {
+func (s *UserServiceServer) StartGRPCServer(MB broker.MessageBroker, DB database.Database, rlog logger.Logger, auth auth.AuthService) {
 	s.DB = DB
 	s.MB = MB
 	s.rlog = rlog
+	s.auth = auth
 	lis, err := net.Listen("tcp", ":8081")
 	if err != nil {
 		logrus.Fatalf("Failed to listen: %v", err)
@@ -94,4 +97,21 @@ func (s *UserServiceServer) UpdateUser(ctx context.Context, req *user.User) (*us
 func (s *UserServiceServer) DeleteUser(ctx context.Context, req *user.DeleteUserRequest) (*user.DeleteUserResponse, error) {
 	s.DB.DeleteUser(req.Username)
 	return &user.DeleteUserResponse{Message: "user deleted"}, nil
+}
+
+func (s *UserServiceServer) Auth(ctx context.Context, req *user.AuthRequest) (*user.AuthResponse, error) {
+	token := req.Token
+	if token == "" {
+		return nil, status.Errorf(codes.Unauthenticated, "Authorization token not provided")
+	}
+
+	valid, err := s.auth.ValidateJWT(token)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "Failed to validate JWT: %v", err)
+	}
+	if !valid {
+		return nil, status.Errorf(codes.Unauthenticated, "Invalid JWT")
+	}
+
+	return &user.AuthResponse{Message: "valid JWT"}, nil
 }
