@@ -39,8 +39,10 @@ func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Databas
 	userGroup.POST("", g.createUser)
 	userGroup.PATCH("", g.updateUser)
 	userGroup.DELETE("", g.deleteUser)
-	userGroup.POST("/login", g.login)
-	userGroup.GET("/auth", g.validateJWT)
+
+	authGroup := r.Group("/api/v1/auth")
+	authGroup.POST("/login", g.login)
+	authGroup.GET("", g.validateJWT)
 	logrus.Infof("Gin Server started on port %s", ":8082")
 	if err := r.Run(":8082"); err != nil {
 		logrus.Fatalf("Failed to run Gin server: %v", err)
