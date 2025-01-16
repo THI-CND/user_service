@@ -36,6 +36,8 @@ export RABBITMQ_HOST=localhost
 export RABBITMQ_PORT=5672
 export RABBITMQ_USER=guest
 export RABBITMQ_PASSWORD=guest
+export FLUENTD_HOST=localhost
+export FLUENTD_PORT=9880
 
 go run main.go
 ```
@@ -115,6 +117,30 @@ RPC Method: DeleteUser
 Request: DeleteUserRequest
 
 Response: DeleteUserResponse
+
+### Login
+URL /api/v1/auth/login
+
+Method: POST
+
+Request Body:
+ ```xml
+ <RequestHeader>
+ Authorization: username:password
+ </RequestHeader>
+```
+
+### Auth
+URL /api/v1/auth
+
+Method: Get
+
+Request Body:
+ ```xml
+ <RequestHeader>
+ Authorization: jwt-token
+ </RequestHeader>
+```
 
 ## MessageBroker
 The User Service uses RabbitMQ as a message broker to publish user creation messages. A simple interface is provided to allow for similar tools. The RabbitMQ struct in the messagebroker.go file handles the connection, publishing, and subscribing to RabbitMQ.
