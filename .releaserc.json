@@ -1,0 +1,30 @@
+{
+    "branches": [
+      "main",
+      {
+        "name": "next",
+        "prerelease": true
+      }
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "chmod a+x mvnw && ./mvnw versions:set -DnewVersion='${nextRelease.version}'"
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "pom.xml"
+          ],
+          "message": "chore(release): ${nextRelease.version} \n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ],
+    "tagFormat": "v${version}"
+  }
