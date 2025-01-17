@@ -119,7 +119,7 @@ Request: DeleteUserRequest
 Response: DeleteUserResponse
 
 ### Login
-URL /api/v1/auth/login
+URL /api/v1/auth
 
 Method: POST
 
