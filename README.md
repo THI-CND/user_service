@@ -78,6 +78,37 @@ Method: GET
 Success Response:
 * Code: 200 OK
 
+### Login
+URL /api/v1/auth
+
+Method: POST
+
+Request Body:
+ ```xml
+ <RequestHeader>
+ Authorization: username:password
+ </RequestHeader>
+```
+
+Returns: 
+```json
+{
+ jwt: <jwt>
+}
+```
+
+### Auth
+URL /api/v1/auth
+
+Method: Get
+
+Request Body:
+ ```xml
+ <RequestHeader>
+ Authorization: jwt-token
+ </RequestHeader>
+```
+
 ## GRPC
 
 gRPC Interface
@@ -117,30 +148,6 @@ RPC Method: DeleteUser
 Request: DeleteUserRequest
 
 Response: DeleteUserResponse
-
-### Login
-URL /api/v1/auth
-
-Method: POST
-
-Request Body:
- ```xml
- <RequestHeader>
- Authorization: username:password
- </RequestHeader>
-```
-
-### Auth
-URL /api/v1/auth
-
-Method: Get
-
-Request Body:
- ```xml
- <RequestHeader>
- Authorization: jwt-token
- </RequestHeader>
-```
 
 ## MessageBroker
 The User Service uses RabbitMQ as a message broker to publish user creation messages. A simple interface is provided to allow for similar tools. The RabbitMQ struct in the messagebroker.go file handles the connection, publishing, and subscribing to RabbitMQ.
