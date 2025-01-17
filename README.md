@@ -164,5 +164,3 @@ The Publish method publishes a message to the specified exchange with the given 
 ### Subscribe
 The Subscribe method subscribes to messages from the specified exchange and routing key, and processes them using the provided handler function.
 
-Example usage in main.go:
-
