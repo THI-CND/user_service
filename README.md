@@ -93,7 +93,7 @@ Request Body:
 Returns: 
 ```json
 {
- jwt: <jwt>
+ "jwt": "<jwt>"
 }
 ```
 
