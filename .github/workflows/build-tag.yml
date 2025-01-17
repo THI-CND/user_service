@@ -30,4 +30,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/thi-cnd/feed_service:${{ github.event.release.tag_name }}
+          tags: ghcr.io/thi-cnd/user_service:${{ github.event.release.tag_name }}
