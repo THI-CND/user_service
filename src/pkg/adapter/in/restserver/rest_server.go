@@ -41,7 +41,7 @@ func (g *GinServer) StartRestServer(MB broker.MessageBroker, DB database.Databas
 	userGroup.DELETE("", g.deleteUser)
 
 	authGroup := r.Group("/api/v1/auth")
-	authGroup.POST("/login", g.login)
+	authGroup.POST("", g.login)
 	authGroup.GET("", g.validateJWT)
 	logrus.Infof("Gin Server started on port %s", ":8082")
 	if err := r.Run(":8082"); err != nil {

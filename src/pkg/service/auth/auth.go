@@ -34,7 +34,7 @@ func (a *Auth) SetupRSAKeys() {
 }
 
 func (a *Auth) GenerateJWT(username string) (string, error) {
-	expirationTime := time.Now().Add(time.Hour * 24) // Set expiration time (e.g., 24 hours)
+	expirationTime := time.Now().Add(time.Hour * 24) 
 
 	claims := &Claims{
 		StandardClaims: jwt.StandardClaims{
