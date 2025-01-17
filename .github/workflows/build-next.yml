@@ -34,4 +34,4 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/thi-cnd/feed_service:next
+          tags: ghcr.io/thi-cnd/user_service:next
