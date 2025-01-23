@@ -45,7 +45,7 @@ go run main.go
 ```
 ## REST API
 ### Create User
-URL: /users
+URL: /api/v1/users
 Method: POST
 Request Body:
  ```json
@@ -57,10 +57,9 @@ Request Body:
 ```
 
 ### Update User
-URL: /users
-Method: PUT
+URL: /api/v1/users
+Method: PATCH
 Request Body:
-
 ```json
 {
   "username": "johndoe",
@@ -69,20 +68,24 @@ Request Body:
 }
 ```
 ### Delete User
-URL: /users/:username
+URL: /api/v1/users
 Method: DELETE
-Success Response:
-* Code: 200 OK
+```json
+{
+  "username": "johndoe"
+}
+```
 
 ### Get User
-URL: /users/:username
+URL: /api/v1/users/:username
 Method: GET
-Success Response:
-* Code: 200 OK
+
+### List Users
+URL: /api/v1/users
+Method: GET
 
 ### Login
 URL /api/v1/auth
-
 Method: POST
 
 Request Body:
