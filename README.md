@@ -4,7 +4,7 @@ This is a User Service built with Go, Gin, PostgreSQL, and RabbitMQ. It provides
 
 ## Prerequisites
 
-- Go 1.16+
+- Go 1.22+
 - Docker
 - Docker Compose
 
@@ -16,10 +16,10 @@ This service provides a rest and a grpc endpoint by standard. As the user-servic
 
 ### Running with Docker Compose
 
-To run the service with Docker Compose, use the following command:
+To run the service with Docker Compose pull the , use the following command:
 
 ```sh
-docker-compose up
+docker-compose up 
 ```
 This will start the PostgreSQL, RabbitMQ, and User Service containers.
 
@@ -27,6 +27,7 @@ This will start the PostgreSQL, RabbitMQ, and User Service containers.
 To run the service locally, set the following environment variables and run the application:
 
 ```sh
+export GIN_MODE: debug
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_USER=postgres
@@ -114,40 +115,57 @@ Request Body:
 gRPC Interface
 The User Service also provides a gRPC interface with the following methods:
 
-### ListUsers
-RPC Method: ListUsers
+```go
+syntax = "proto3";
 
-Request: Empty
+package user;
+option go_package = "proto/user";
+service UserService {
+  rpc ListUsers (Empty) returns (UserListResponse);
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+  rpc CreateUser (User) returns (UserResponse);
+  rpc UpdateUser (User) returns (UserResponse);
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
+  rpc Auth (AuthRequest) returns (AuthResponse);
+}
 
-Response: UserListResponse
 
-### GetUser
-RPC Method: GetUser
+message Empty {}
 
-Request: GetUserRequest
+message User {
+  string username = 1;
+  string firstname = 2;
+  string lastname = 3;
+}
 
-Response: UserResponse
+message GetUserRequest {
+  string username = 1;
+}
 
-### CreateUser
-RPC Method: CreateUser
+message UserResponse {
+  User user = 1;
+}
 
-Request: User
+message UserListResponse {
+  repeated User users = 1;
+}
 
-Response: UserResponse
+message DeleteUserRequest {
+  string username = 1;
+}
 
-### UpdateUser
-RPC Method: UpdateUser
+message DeleteUserResponse {
+  string message = 1;
+}
 
-Request: User
+message AuthRequest {
+  string token = 1;
+}
 
-Response: UserResponse
-
-### DeleteUser
-RPC Method: DeleteUser
-
-Request: DeleteUserRequest
-
-Response: DeleteUserResponse
+message AuthResponse {
+  string message = 1;
+}
+```
 
 ## MessageBroker
 The User Service uses RabbitMQ as a message broker to publish user creation messages. A simple interface is provided to allow for similar tools. The RabbitMQ struct in the messagebroker.go file handles the connection, publishing, and subscribing to RabbitMQ.
